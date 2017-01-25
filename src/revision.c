@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * revision.c
  *
@@ -21,8 +23,8 @@
 #define MINOR 1
 #define REVISION "0"
 #define REVISION_PATH "no path"
-#define TIME	"15:11:36"
-#define DATA	"2017-01-19"
+#define TIME	"14:32:29"
+#define DATA	"2017-01-25"
 static char gPath[]=REVISION_PATH;
 static char gTime[]=TIME;
 static char gData[]=DATA;

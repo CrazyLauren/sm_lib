@@ -1,0 +1,12 @@
+sm_lib 0.2
+-------------------
+
+  - Fixed bug: incorrect calculation unix time in ms
+  - Fixed bug: destroying IPC Event instead of closing 
+  - Checking by PVS-Studio
+
+sm_lib 0.3
+-------------------
+
+  - Now using sem_init instead of sem_open   
+  

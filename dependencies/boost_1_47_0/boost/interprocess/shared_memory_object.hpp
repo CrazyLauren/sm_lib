@@ -322,7 +322,7 @@ inline bool shared_memory_object::priv_open_or_create
          //We need a loop to change permissions correctly using fchmod, since
          //with "O_CREAT only" shm_open we don't know if we've created or opened the file.
          while(1){
-            m_handle = shm_open(m_filename.c_str(), oflag|O_EXCL, unix_perm);
+            m_handle = shm_open(m_filename.c_str(), oflag, unix_perm);
             if(m_handle >= 0){
                ::fchmod(m_handle, unix_perm);
                break;

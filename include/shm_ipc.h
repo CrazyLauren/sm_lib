@@ -1,16 +1,16 @@
 /*
- * deftype
+ * shm_ipc.h
  *
  * Copyright © 2016 Sergey Cherepanov (sergey0311@gmail.com)
  *
- *  Created on: 12.04.2012
+ *  Created on: 12.12.2016
  *      Author: Sergey Cherepanov (https://github.com/CrazyLauren)
  *
  * Distributed under MPL 2.0 (See accompanying file LICENSE.txt or copy at
  * https://www.mozilla.org/en-US/MPL/2.0)
  */
-#ifndef DEFTYPE_
-#define DEFTYPE_
+#ifndef SHM_IPC_H_
+#define SHM_IPC_H_
 
 #ifdef ENABLE_VTUNE
 #	include <profiler_vtune.h>
@@ -22,7 +22,7 @@
 #	define PROFILE_RESUME()
 #endif
 
-#if (__cplusplus>= 201103L) || (_MSC_VER >= 1800) //fucking msvc
+#if (__cplusplus>= 201103L) || (_MSC_VER >= 1800) 
 #	include <unordered_set>
 #	include <unordered_map>
 #	define HASH_SET std::unordered_set
@@ -139,7 +139,7 @@ typedef std::string CText;
 #include <UType/CRAII.h>
 #include <UType/CFlags.h>
 #include <UType/CMutex.h>
-//#include <UType/CText.h>
+
 
 
 #include <UType/strtonum.h>
@@ -147,7 +147,6 @@ typedef std::string CText;
 #include <UType/CAssertException.h>
 #include <uclock.h>
 #include <logging/share_trace.h>
-#include <UType/CAntiHang.h>
 #include <UType/CIntrusived.h>
 #include <FloatCompare.h>
 #include <UType/SmartField.h>
@@ -155,19 +154,12 @@ typedef std::string CText;
 #include <UType/CBuffer.h>
 #include <UType/CConfig.h>
 #include <UType/version.h>
-#include <UType/uuid.h>
-#include <UType/intrusive_ptr.h>
 #include <UType/deftype.h>
-#include <UType/CCondvar.h>
-
-#include <UType/CIPCSem.h>
-#include <UType/CIPCSignalEvent.h>
+#include <UType/intrusive_ptr.h>
 
 
 #include <UType/CEvents.h>
 #include <UType/CEvent.h>
-#include <UType/CThread.h>
-#include <UType/CSafeData.h>
-#include <tasks.h>
+#include <sm_socket.h>
 
-#endif /*DEFTYPE_*/
+#endif /*SHM_IPC_H_*/

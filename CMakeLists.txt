@@ -72,8 +72,9 @@ SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} CACHE STRING "You may add additiona
 ################################################################################
 #Look for packages
 ################################################################################
+add_definitions(-DBOOST_ALL_NO_LIB)
 if(NOT DEFINED BOOST_ROOT)
-	SET(BOOST_ROOT ${SHARE_DEPENDENCIES_PATH})
+	SET(BOOST_ROOT ${SHARE_DEPENDENCIES_PATH}  CACHE PATH "boost path")
 endif(NOT DEFINED BOOST_ROOT)
 	
 FIND_PACKAGE(Boost REQUIRED)

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * client.cpp
  *
@@ -9,13 +11,11 @@
  * Distributed under MPL 2.0 (See accompanying file LICENSE.txt or copy at
  * https://www.mozilla.org/en-US/MPL/2.0)
  */
-#include <deftype>
-#include <iostream>
-#include <sm_socket.h>
+#include <shm_ipc.h>
 
 using namespace NSHARE;
 
-#define SEND_BUF_SIZE 1000
+#define SEND_BUF_SIZE 100000
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
 		for (;!_client.MOpen("test"); NSHARE::usleep(100000))
 		{
-			std::cerr << "Cannot opened test SM" << std::endl;
+			std::cerr << "Cannot open test SM" << std::endl;
 		}
 		std::cout << "Opened" << std::endl;
 		for(;!_client.MConnect();)

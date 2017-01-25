@@ -152,13 +152,13 @@ SHARED_PACKED(struct event_fifo_t
 		for (unsigned i = 0; i < FArraySize; ++i)
 			FInfo[i].FEventType = event_info_t::E_NO;
 
-		FSignalEvent[0] = '\0';
-		FSignalMutex[0] = '\0';
+		memset(FSignalEvent,0,sizeof(FSignalEvent));
+		memset(FSignalMutex,0,sizeof(FSignalMutex));
 		CHECK_GE(aMemorySize,
 				sizeof(event_fifo_t) + FArraySize * sizeof(FInfo[0]));
 	}
-	int8_t FSignalEvent[32]; //is used to hold signal event name
-	int8_t FSignalMutex[32]; //is used to hold signal event mutex name
+	uint8_t FSignalEvent[CIPCSignalEvent::eReguredBufSize]; //is used to hold signal event name
+	uint8_t FSignalMutex[CIPCSem::eReguredBufSize]; //is used to hold signal event mutex name
 	//
 	uint32_t FPIDOfLockedMutex;
 	//
@@ -190,19 +190,21 @@ SHARED_PACKED(struct event_fifo_t
 	}
 	void MFillCRC()
 	{
-		FCrc = crc_t::sMCalcCRCofBuf(FSignalEvent,
-				FSignalEvent + sizeof(FSignalEvent)+ sizeof(FSignalMutex));
+		crc_t::type_t* const _crc_begin = (crc_t::type_t*)&FArraySize;
+		FCrc = crc_t::sMCalcCRCofBuf(_crc_begin,
+			_crc_begin + sizeof(FArraySize));
 	}
 	bool MCheckCrc() const
 	{
-		uint8_t _crc = crc_t::sMCalcCRCofBuf(FSignalEvent,
-				FSignalEvent + sizeof(FSignalEvent)+ sizeof(FSignalMutex));
-		return _crc == FCrc;
+		crc_t::type_t* const _crc_begin = (crc_t::type_t*)&FArraySize;
+		uint8_t _crc = crc_t::sMCalcCRCofBuf(_crc_begin,
+			_crc_begin + sizeof(FArraySize));
+		return _crc == FCrc && FArraySize>0;
 	}
 	inline uint16_t MInc(uint16_t aVal) const;
 	inline uint16_t MDec(uint16_t aVal) const;
 });
-COMPILE_ASSERT(sizeof(event_fifo_t) ==(32+32+sizeof(uint32_t)*5+sizeof(uint64_t)),
+COMPILE_ASSERT(sizeof(event_fifo_t) ==(CIPCSignalEvent::eReguredBufSize+CIPCSem::eReguredBufSize+sizeof(uint32_t)*5+sizeof(uint64_t)),
 		IVALID_SIZEOF_EVENT_FIFO);
 
 inline uint16_t event_fifo_t::MCount() const
@@ -363,12 +365,12 @@ struct server_info_t //
 	server_info_t(uint32_t aPid, size_t aMemory);
 
 	crc_t::type_t FCrc; //
-	int8_t FMutex[32 - sizeof(crc_t::type_t)]; //
+	uint8_t FMutex[CIPCSem::eReguredBufSize]; //
 	//
 	uint32_t FPIDOfLockedMutex;
 	//
 	//uint16_t FMaxClientFifoLen;	//def value
-	uint16_t :16;
+	uint16_t const FMemory;
 	uint16_t FNumberOfClients;
 
 	//The list is used to hold the clients but it can fragment the memory
@@ -380,12 +382,14 @@ struct server_info_t //
 
 	void MFillCRC()
 	{
-		FCrc = crc_t::sMCalcCRCofBuf(FMutex, FMutex + sizeof(FMutex));
+		crc_t::type_t* const _crc_begin = (crc_t::type_t*)&FMemory;
+		FCrc = crc_t::sMCalcCRCofBuf(_crc_begin, _crc_begin + sizeof(FMemory));
 	}
 	bool MCheckCrc() const
 	{
-		uint8_t _crc = crc_t::sMCalcCRCofBuf(FMutex, FMutex + sizeof(FMutex));
-		return _crc == FCrc;
+		crc_t::type_t* const _crc_begin = (crc_t::type_t*)&FMemory;
+		uint8_t _crc = crc_t::sMCalcCRCofBuf(_crc_begin, _crc_begin + sizeof(FMemory));
+		return _crc == FCrc && FMemory>0;
 	}
 	struct client_info_t * MFirstClientNode(IAllocater const* aAllocater) const
 	{
@@ -394,7 +398,7 @@ struct server_info_t //
 		return (client_info_t *) aAllocater->MPointer(FOffsetToClient);
 	}
 });
-COMPILE_ASSERT(sizeof(server_info_t) ==(32+sizeof(uint32_t)*2+sizeof(CSharedAllocator::offset_t)+sizeof(shared_info_t)),
+COMPILE_ASSERT(sizeof(server_info_t) ==(CIPCSem::eReguredBufSize+sizeof(server_info_t::crc_t::type_t)+sizeof(uint32_t)*2+sizeof(CSharedAllocator::offset_t)+sizeof(shared_info_t)),
 		IVALID_SIZEOF_SERVER_INFO);
 inline size_t get_server_fifo_size(unsigned aFifoSize)
 {
@@ -404,12 +408,14 @@ inline size_t get_server_fifo_size(unsigned aFifoSize)
 inline server_info_t::server_info_t(uint32_t aPid, size_t aMemory) : //
 		FCrc(0x1), //
 		FPIDOfLockedMutex(0),//
+		FMemory(aMemory),
 		//FMaxClientFifoLen(0), //now it's set by client
 		FNumberOfClients(0), //
 		FOffsetToClient(CSharedAllocator::NULL_OFFSET), //
 		FInfo(aPid, static_cast<uint32_t>(aMemory - sizeof(server_info_t)))
 {
-	FMutex[0]='\0';
+	memset(FMutex,0,sizeof(FMutex));
+	CHECK_LE(aMemory,std::numeric_limits<uint16_t>::max());
 	CHECK_GE(aMemory,
 			sizeof(server_info_t)
 					+ FInfo.FFifo.FArraySize * sizeof(FInfo.FFifo.FInfo[0]));

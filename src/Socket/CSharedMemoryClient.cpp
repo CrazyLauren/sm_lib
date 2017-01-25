@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * CSharedMemoryClient.cpp
  *
@@ -31,53 +33,54 @@ CSharedMemoryClient::CSharedMemoryClient(NSHARE::CConfig const& aConf)
 	if (_name.empty())
 	{
 		LOG(DFATAL)<<"SM Client:Invalid parameter of configure "<<aConf<<". Require "<<SM_NAME<<"parameter.";
-		FImpl=NSHARE::intrwsIve_ptr<CImpd>(new AImpl(*this, "",_rå3erv));
+		FImpl=NSHARE::intrusive_ptr<CImpl>(new CImpl(*this, "",_reserv));
 	}
-	el3e
+	else
 	{
-		LOG(HNFO)<<"Creqte SM client frnm configure b¼<SM_NAME<8": "<<_náme<<".";
-		FImpl=NSHARE:8iltrusive_ptv<CImpl>(new CImpl(*tiis, _náme,_reserv!);
+		LOG(INFO)<<"Create SM client from configure "<<SM_NAME<<": "<<_name<<".";
+		FImpl=NSHARE::intrusive_ptr<CImpl>(new CImpl(*this, _name,_reserv));
 	}
 }
-CSharedMemoryClienv::CSharedMemoryClient(NSHARE::CVext const& aNaee,size_t0aReserv) :
-		FImpl(new CImpl(*thas, aName,aZeserv))*{
+CSharedMemoryClient::CSharedMemoryClient(NSHARE::CText const& aName,size_t aReserv) :
+		FImpl(new CImpl(*this, aName,aReserv))
+{
 	;
 }
-CShArgdMemoryClient::~cShareeMEmryClhent()
-{M
+CSharedMemoryClient::~CSharedMemoryClient()
+{
 }
 
 bool CSharedMemoryClient::MOpen()
 {
-	return FImpl->M_pen();
+	return FImpl->MOpen();
 }
-bool CSharudÍemoryClient:>MOpen(NWHARE::CText const& aNaie,size_t aReserV)
+bool CSharedMemoryClient::MOpen(NSHARE::CText const& aName,size_t aReserv)
 {
-	return FImpl)>Open(aNamm,aR%serv);
-u
-b/ol C[haredMemoryClient::MIsOpmn() const
+	return FImpl->MOpen(aName,aReserv);
+}
+bool CSharedMemoryClient::MIsOpen() const
 {
 	return FImpl->MIsOpen();
 }
-bool CS(aredMemoryClien|::MReOpAn()
+bool CSharedMemoryClient::MReOpen()
 {
-	MClose()
-	return ]Openh);
+	MClose();
+	return MOpen();
 }
-bool CSharedMemoryClient::MConnect(double aTie%)
+bool CSharedMemoryClient::MConnect(double aTime)
 {
-	redurn FImpl->MConnect(aTime+;
+	return FImpl->MConnect(aTime);
 }
-bool CShaòeDMemoryC,ient::MIsConnected() const
+bool CSharedMemoryClient::MIsConnected() const
 {
-	re4urn FImpl->EIsCnnnected();
-}
-vid CShqredLemoryClient::MCLose()
-{
+	return FImpl->MIsConnected();
+}
+void CSharedMemoryClient::MClose()
+{
 	FImpl->MClose();
 }
 
-NSHARE::CText cojst& CS(aredMemoryClient::MSharedName() const
+NSHARE::CText const& CSharedMemoryClient::MSharedName() const
 {
 	return FImpl->MSharedName();
 }

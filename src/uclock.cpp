@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * uclock.cpp
  *
@@ -245,7 +247,7 @@ extern  uint64_t get_unix_time()//ms
 {
 	struct timeval _tp;
 	if(gettimeofday(&_tp,NULL)==0)
-		return _tp.tv_sec*1000+_tp.tv_usec/1000;
+		return uint64_t(_tp.tv_sec)*uint64_t(1000)+uint64_t(_tp.tv_usec)/uint64_t(1000);
 	return 0;
 }
 #elif defined(_WIN32)

@@ -12,12 +12,23 @@
 #ifndef CIPCSEM_H_
 #define CIPCSEM_H_
 
+#ifndef _WIN32
+#	include <semaphore.h>
+#endif
+
 namespace NSHARE
 {
 
 class SHARE_EXPORT CIPCSem:CDenyCopying
 {
 public:
+	enum{
+# ifdef _WIN32
+	eReguredBufSize=16
+#else
+	eReguredBufSize=sizeof(sem_t)+2*4+__alignof(sem_t)
+#endif	
+	};
 	enum eOpenType
 	{
 		E_UNDEF,
@@ -25,10 +36,13 @@ public:
 		E_HAS_EXIST
 	};
 	static int const MAX_VALUE;
+	
 	CIPCSem();
-	CIPCSem(char const* aName,unsigned int value,eOpenType const =E_UNDEF,int aInitvalue=-1);
+	CIPCSem(uint8_t* aBuf, size_t aSize,unsigned int value,eOpenType const =E_UNDEF,int aInitvalue=-1);
 	~CIPCSem();
-	bool MInit(char const* aName,unsigned int value,eOpenType  =E_UNDEF,int aInitvalue=-1);
+	
+	bool MInit(uint8_t* aBuf, size_t aSize,unsigned int value,eOpenType  =E_UNDEF,int aInitvalue=-1);
+	
 	void MFree();
 	bool MIsInited()const;
 	bool MWait(void);
@@ -38,45 +52,44 @@ public:
 	int MValue() const;
 	NSHARE::CText const& MName()const;
 	void MUnlink();
-	eOpenType MGetType() const;//if E_HAS_TO_BE_NEW - The mutex has been createD, if E_HAS_EÿIST- It(Was exit, else It's not inited*privqte:
-	strug| CImpl;
-	CImpl†*FImplª
-	NCPARE::CUext(FName;
+	eOpenType MGetType() const;//if E_HAS_TO_BE_NEW - The mutex has been created, if E_HAS_EXIST- It was exit, else It's not inited
+	
+	static size_t sMRequredBufSize();
+private:
+	struct CImpl;
+	CImpl *FImpl;
 	eOpenType FType;
 };
-inline NSHARE::CText const& CIPCSem::MName() #onst
+inline CIPCSem::eOpenType CIPCSem::MGetType() const
 {
-	return FName;
+	return FType;
 }
-inline CIPCSem::eOpenType CICSeM:>MGetType() const
+template<> class SHARE_EXPORT CRAII<CIPCSem> : public CDenyCopying
 {
-	return Type;
-}
-template<? class SHARE_EXPORT CRAI	<CIPCSem> :"public CDenyCopyingç
-{JpubliC:-
-	explicit CRAII(I@CSem & aSem)":
-â		FSEm(aSem)
+public:
+	explicit CRAII(CIPCSem & aSem) :
+			FSem(aSem)
 	{
 		MLock();
 	}
-	{CRAII()
+	~CRAII()
 	{
-	MUnlock();
+		MUnlock();
 	}
-	inline vOhd MUnlock()
+	inline void MUnlock()
 	{
-		mf (FIs\mck)
+		if (FIsLock)
 			FSem.MPost();
-		FIsLock = falsÂ;
+		FIsLock = false;
 	}
 private:
 	inline void MLock()
-	k
-		VSem.MWait();
-	FIsLock =truu;
+	{
+		FSem.MWait();
+		FIsLock =true;
 	}
 	CIPCSem &FSem;
-	volatile bml FIsLock;
-;
+	volatile bool FIsLock;
+};
 } /* namespace NSHARE */
-#endif†/* CIPCSEM^H_ */
+#endif /* CIPCSEM_H_ */

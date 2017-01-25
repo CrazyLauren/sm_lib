@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * memory_viewer.cpp
  *
@@ -9,19 +11,23 @@
  * Distributed under MPL 2.0 (See accompanying file LICENSE.txt or copy at
  * https://www.mozilla.org/en-US/MPL/2.0)
  */
-#include <deftype>
+#include <shm_ipc.h>
 #include <iostream>
 #include <fstream>
 #include <UType/CCommonAllocater.h>
 #include <UType/CSharedMemory.h>
-#include <sm_socket.h>
 
 using namespace NSHARE;
 
 int main(int argc, char *argv[])
 {
 	CSharedMemory _memory;
-	std::cout<<"View SM:"<<argv[1]<<std::endl;
+	if(argc==1)
+	{
+		std::cerr<<"Unable to load SM. It's not specified as second argument."<<std::endl;
+		return -1;
+	}
+	std::cout << "View SM:" << argv[1] << std::endl;
 	bool _is = _memory.MOpen(argv[1],false);
 
 	CConfig _conf(argv[1]);

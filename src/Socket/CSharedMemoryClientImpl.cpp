@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * CSharedMemoryClientImpl.cpp
  *
@@ -33,11 +35,11 @@ version_t CSharedMemoryClient::sMGetVersion()
 }
 
 CSharedMemoryClient::CImpl::CImpl(CSharedMemoryClient& aThis,
-		NSHARE::CText const& aName, size_t aReserv) :
+		NSHARE::CText const& aName,size_t aReserv) :
 		FThis(aThis), //
 		FMyInfo(NULL), //
 		FName(aName), //
-		FReserv(aReserv), //
+		FReserv(aReserv),//
 		FIsConnected(false), //
 		FIsOpened(false) //
 {
@@ -132,6 +134,7 @@ bool IMPL_CLASS::MOpenServer(void* _p)
 	}
 	_is = MInitSignalEvent(FServerSignalEvent, &_info->FInfo);
 	FServerInfo = _info;
+	VLOG(2)<<"Opened";
 	return true;
 }
 void IMPL_CLASS::MInvokeEvent(event_info_t* _info)
@@ -200,8 +203,7 @@ bool IMPL_CLASS::MConnect(double aTime)
 			LOG(ERROR)<<"Cannot connect";
 			CHECK_EQ(FMyInfo->FInfo.FId.FUniqueID,0);
 			break;
-		}
-		else
+		}else
 		{
 			CHECK_NE(_info.FEventType, event_info_t::E_CONNECTED);
 			if(_is_try_again)
@@ -293,12 +295,13 @@ bool IMPL_CLASS::MClose()
 	if (MIsConnected())
 	MDisconnect();
 
+
 	FIsOpened = false;
 
 	VLOG(2) << "Deallocate memory";
 	FServerSignalEvent.FSignalEvent.MFree();
 	FServerSignalEvent.FSignalSem.MFree();
-	if(FMyInfo->FInfo.FId.FUniqueID==0) //the server is handled disconnect
+	if(FMyInfo->FInfo.FId.FUniqueID==0)//the server is handled disconnect
 	deallocate_object(FSharedMemory.MGetAllocator(), FMyInfo);
 
 	FMyInfo = NULL;

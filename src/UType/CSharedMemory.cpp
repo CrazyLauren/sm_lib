@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
  * CSharedMemory.cpp
  *
@@ -31,12 +33,12 @@ SHARED_PACKED(
 			mem_info_t() :
 			FCrc(0x1),FPIDOfLockedMutex(0),FPIDOfLockedAllocMutex(0), FSize(0),FPidOffCreator(NSHARE::CThread::sMPid())
 			{
-				FSharedMutex[0] = '\0';
-				FAllocMutex[0]='\0';
+				memset(FSharedMutex,0,sizeof(FSharedMutex));
+				memset(FAllocMutex,0,sizeof(FAllocMutex));
 			}
 			crc_t::type_t FCrc;
-			int8_t FSharedMutex[32 - sizeof(crc_t::type_t)];
-			int8_t FAllocMutex[32];
+			uint8_t FSharedMutex[CIPCSem::eReguredBufSize];
+			uint8_t FAllocMutex[CIPCSem::eReguredBufSize];
 			uint32_t FPIDOfLockedMutex;
 			uint32_t FPIDOfLockedAllocMutex;
 			uint32_t FSize;
@@ -47,22 +49,19 @@ SHARED_PACKED(
 bool CSharedMemory::mem_info_t::MUpdateCRC()
 {
 	const mem_info_t::crc_t::type_t* _begin =
-			(mem_info_t::crc_t::type_t*) (this);
-	FCrc = crc_t::sMCalcCRCofBuf(_begin + 1,
-			_begin + sizeof(FSharedMutex) / sizeof(mem_info_t::crc_t::type_t));
+			(mem_info_t::crc_t::type_t*) (&FSize);
+	FCrc = crc_t::sMCalcCRCofBuf(_begin,
+			_begin + (sizeof(FPidOffCreator)+sizeof(FSize)) / sizeof(mem_info_t::crc_t::type_t));
 	return true;
 }
 
 bool CSharedMemory::mem_info_t::MCheckCRC() const
 {
-	if (FSharedMutex[0] == '\0')
-		return false;
-
 	const mem_info_t::crc_t::type_t* _begin =
-			(mem_info_t::crc_t::type_t*) (this);
-	crc_t::type_t _crc = crc_t::sMCalcCRCofBuf(_begin + 1,
-			_begin + sizeof(FSharedMutex) / sizeof(mem_info_t::crc_t::type_t));
-	return _crc == FCrc;
+			(mem_info_t::crc_t::type_t*) (&FSize);
+	crc_t::type_t _crc = crc_t::sMCalcCRCofBuf(_begin,
+			_begin + (sizeof(FPidOffCreator) + sizeof(FSize)) / sizeof(mem_info_t::crc_t::type_t));
+	return _crc == FCrc && FPidOffCreator>0 && FSize>0;
 }
 class CSharedAllocatorImpl: public IAllocater
 {
@@ -70,7 +69,7 @@ public:
 	typedef uint8_t common_allocater_t;
 	//COMPILE_ASSERT((sizeof(NULL_OFFSET)>=sizeof(CSharedAllocator::NULL_OFFSET)),InvalidNullOffsetofSM);
 
-	CSharedAllocatorImpl(struct CSharedMemory::CImpl&);
+	CSharedAllocatorImpl(CSharedMemory::CImpl&);
 	virtual ~CSharedAllocatorImpl();
 	virtual void* MAllocate(size_type aSize, uint8_t aAlignment = 4,eAllocatorType = ALLOCATE_FROM_COMMON);
 	virtual void* MReallocate(void* p, size_type aSize, uint8_t aAlignment = 4,eAllocatorType = ALLOCATE_FROM_COMMON);
@@ -211,14 +210,13 @@ struct CSharedMemory::CImpl
 	{
 		MFree();
 	}
-
 	bool MFree();
 	size_t MGetSize();
-	bool MInitAllocate(void* aTo, bool _is_allocater, size_t aSize,bool aIsCleanUp,size_t aReserv);
 	bool MInit(const NSHARE::CText& aName, size_t aSize,bool aIsCleanUp,size_t aReserv);
 	static int sMCleanUp(CSharedAllocator* WHO, void* WHAT, void* YOU_DATA);
 	bool MCleanUp(CSharedAllocator::clean_up_f_t WHO, void* YOU_DATA);
 	bool MCleanUpShareSem();
+
 	bool MLock() const;
 	bool MUnlock() const;
 	bool MLockAlloc() const;
@@ -328,6 +326,7 @@ bool CSharedMemory::CImpl::MUnlockAlloc() const
 	}
 	return FAllocaterSem.MPost();
 }
+
 bool CSharedMemory::CImpl::MFree()
 {
 	if (!FIsInited)
@@ -376,7 +375,7 @@ bool CSharedMemory::CImpl::MInit(const NSHARE::CText& aName, size_t aSize,bool a
 
 	{
 		VLOG(2)<<"Initialize Shared memory "<<aName<<" path "<<FShedMem.get_name();
-		offset_t _size = 0;
+		offset_t _size = -1;
 		bool const _is = FShedMem.get_size(_size);
 		VLOG_IF(2, _is) << "Shared memory size " << _size;
 		if (_is)
@@ -395,7 +394,7 @@ bool CSharedMemory::CImpl::MInit(const NSHARE::CText& aName, size_t aSize,bool a
 					FShedMem.truncate(aSize);
 					_is_new_header = true;
 				}
-			}else if(aSize > 0 && aSize !=_size)
+			}else if(aSize > 0 /*&& aSize !=_size*/)
 			{
 				LOG(WARNING)<<"The Shm "<<aName<<" has been created already.";
 
@@ -449,41 +448,12 @@ bool CSharedMemory::CImpl::MInit(const NSHARE::CText& aName, size_t aSize,bool a
 		FInfo->FSize = MGetSize();
 
 		//creating shared mutex
-		//The shared mutex name is consist of two part:
-		//the first is - pid, the second random string
-		{
-			NSHARE::CText _rand;
-			_rand=get_random_str(10);
-			char _mutex_name[1024];
-			sprintf(_mutex_name,"shmem_%d_%s", NSHARE::CThread::sMPid(),
-					_rand.c_str());
-			size_t _name_len = strlen(_mutex_name);
-			_name_len =
-					_name_len <= (sizeof(FInfo->FSharedMutex) - 1) ?
-							_name_len : (sizeof(FInfo->FSharedMutex) - 1);
-			memcpy(FInfo->FSharedMutex, _mutex_name, _name_len);
-			FInfo->FSharedMutex[_name_len] = '\0';
-		}
-		{
-			NSHARE::CText _rand;
-			_rand=get_random_str(10);
-			char _mutex_name[1024];
-			sprintf(_mutex_name, "shmem_%d_al_%s", NSHARE::CThread::sMPid(),
-					_rand.c_str());
-			size_t _name_len = strlen(_mutex_name);
-			_name_len =
-					_name_len <= (sizeof(FInfo->FAllocMutex) - 1) ?
-							_name_len : (sizeof(FInfo->FAllocMutex) - 1);
-			memcpy(FInfo->FAllocMutex, _mutex_name, _name_len);
-			FInfo->FAllocMutex[_name_len] = '\0';
-		}
-
-		if (!FShareSem.MInit((char const*) FInfo->FSharedMutex, 1,
+		if (!FShareSem.MInit(FInfo->FSharedMutex,sizeof(FInfo->FSharedMutex), 1,
 				CIPCSem::E_HAS_TO_BE_NEW)
-				|| !FAllocaterSem.MInit((char const*) FInfo->FAllocMutex, 1,
+				|| !FAllocaterSem.MInit(FInfo->FAllocMutex,sizeof(FInfo->FAllocMutex), 1,
 						CIPCSem::E_HAS_TO_BE_NEW))
 		{
-			LOG(DFATAL) << "Cannot create Sems "<<FInfo->FSharedMutex<<" and "<<FInfo->FAllocMutex;
+			LOG(DFATAL) << "Cannot create the semaphores as it's exist in Shm. Thus cannot open Shm.";
 			goto error;
 		}
 		CRAII<CSharedMemory> _block(*this);
@@ -507,9 +477,9 @@ bool CSharedMemory::CImpl::MInit(const NSHARE::CText& aName, size_t aSize,bool a
 			VLOG(2)<<"The ShM head is not valid";
 			return false;
 		}
-		if (!FShareSem.MInit((char const*) FInfo->FSharedMutex, 1,
+		if (!FShareSem.MInit(FInfo->FSharedMutex,sizeof(FInfo->FSharedMutex), 1,
 				CIPCSem::E_HAS_EXIST)
-				|| !FAllocaterSem.MInit((char const*) FInfo->FAllocMutex, 1,
+				|| !FAllocaterSem.MInit( FInfo->FAllocMutex,sizeof(FInfo->FAllocMutex), 1,
 						CIPCSem::E_HAS_EXIST))
 		{
 			VLOG(2) << "Cannot init Sems";
