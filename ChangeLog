@@ -9,4 +9,10 @@ sm_lib 0.3
 -------------------
 
   - Now using sem_init instead of sem_open   
+
+sm_lib 0.4
+-------------------
+
+  - Added Futex  
+  - Fix alignment problems with MINGW
   

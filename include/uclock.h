@@ -21,5 +21,8 @@ extern SHARE_EXPORT double get_time();
 extern SHARE_EXPORT void usleep(long unsigned aVal);
 extern SHARE_EXPORT unsigned sleep(unsigned aVal);
 extern SHARE_EXPORT uint64_t get_unix_time(); //ms
+#if defined(__QNX__)|| defined(unix)
+extern SHARE_EXPORT void get_time(struct timespec *ts);
+#endif
 }
 #endif /* UCLOCK_H_ */
