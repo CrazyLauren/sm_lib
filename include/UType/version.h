@@ -60,9 +60,9 @@ inline NSHARE::CConfig version_t::MSerialize() const
 	NSHARE::CConfig _conf(NAME);
 	if(MIsExist())
 	{
-		_conf.MSet("mj", FMajor);
-		_conf.MSet("mn", FMinor);
-		_conf.MSet("rs", FRelease);
+		_conf.MSet<unsigned>("mj", FMajor);
+		_conf.MSet<unsigned>("mn", FMinor);
+		_conf.MSet<unsigned>("rs", FRelease);
 	}
 	return _conf;
 }
