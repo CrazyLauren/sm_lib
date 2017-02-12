@@ -315,7 +315,10 @@ bool CThread::sMYield()
 #if __cplusplus >=201103L
 	std::this_thread::yield();
 #else
-	Sleep(1);
+	if(!SwitchToThread())
+	{
+      Sleep(0);
+	}
 #endif
 	return true;
 }
