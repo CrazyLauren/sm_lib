@@ -357,7 +357,9 @@ inline iterator_type<Pointer, Refer, diff_type> operator+(
 	return iterator_type<Pointer, Refer, diff_type>(__i.base() + __n);
 }
 inline CBuffer::CBuffer(IAllocater* aAlloc, void const* aBegin, void const* aEnd,eAllocatorType aType) :
-	BEGIN_SIZE(DEF_BUF_RESERVE), FBuffer(aAlloc ? aAlloc : sMDefAllaocter(),aType)
+	BEGIN_SIZE(DEF_BUF_RESERVE),//
+	FBuffer(aAlloc ? aAlloc : sMDefAllaocter(),aType),//
+	FIsDetached(false)
 {
 	size_t const _size = (char*)aEnd - (char*)aBegin;
 	resize(_size);
@@ -365,7 +367,9 @@ inline CBuffer::CBuffer(IAllocater* aAlloc, void const* aBegin, void const* aEnd
 }
 template<class ItT>
 inline CBuffer::CBuffer(IAllocater* aAlloc,ItT aBegin, ItT aEnd,eAllocatorType aType) :
-		BEGIN_SIZE(DEF_BUF_RESERVE), FBuffer(aAlloc ? aAlloc : sMDefAllaocter(),aType)
+		BEGIN_SIZE(DEF_BUF_RESERVE),//
+		FBuffer(aAlloc ? aAlloc : sMDefAllaocter(),aType),//
+		FIsDetached(false)
 {
 	resize(aEnd - aBegin);
 	iterator _begin = begin();
