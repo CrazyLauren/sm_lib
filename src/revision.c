@@ -1,10 +1,10 @@
 /*
  * revision.c
  *
- * Copyright © 2016 Sergey Cherepanov (sergey0311@gmail.com)
+ * Copyright © 2016 https://github.com/CrazyLauren 
  *
  *  Created on: 15.10.2015
- *      Author: Sergey Cherepanov (https://github.com/CrazyLauren)
+ *      Author: https://github.com/CrazyLauren 
  *
  * Distributed under MPL 2.0 (See accompanying file LICENSE.txt or copy at
  * https://www.mozilla.org/en-US/MPL/2.0)
@@ -18,11 +18,11 @@
 #endif
 
 #define MAJOR 0
-#define MINOR 3
+#define MINOR 4
 #define REVISION "0"
 #define REVISION_PATH "no path"
-#define TIME	"22:54:02"
-#define DATA	"2017-01-28"
+#define TIME	"13:14:00"
+#define DATA	"2017-02-19"
 static char gPath[]=REVISION_PATH;
 static char gTime[]=TIME;
 static char gData[]=DATA;
